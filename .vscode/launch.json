@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SyncHabit (Development)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_development.dart",
+      "args": [
+        "--flavor",
+        "development",
+        "--target",
+        "lib/main_development.dart"
+      ],
+      "toolArgs": ["--flutter-custom-path", ".fvm/flutter_sdk/bin/flutter"]
+    },
+    {
+      "name": "SyncHabit (Staging)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_staging.dart",
+      "args": [
+        "--flavor",
+        "staging",
+        "--target",
+        "lib/main_staging.dart"
+      ],
+      "toolArgs": ["--flutter-custom-path", ".fvm/flutter_sdk/bin/flutter"]
+    },
+    {
+      "name": "SyncHabit (Production)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_production.dart",
+      "args": [
+        "--flavor",
+        "production",
+        "--target",
+        "lib/main_production.dart"
+      ],
+      "toolArgs": ["--flutter-custom-path", ".fvm/flutter_sdk/bin/flutter"]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+name: synchabit_workspace
+
+packages:
+  - .
+
+command:
+  bootstrap:
+    useFvm: true
+
+scripts:
+  lint:
+    run: fvm flutter analyze
+    description: Run Flutter analyzer using FVM.
+  test:
+    run: fvm flutter test
+    description: Run tests using FVM.
+  build:dev:
+    run: fvm flutter build apk --flavor development --target lib/main_development.dart
+    description: Build Development APK using FVM.
+  build:staging:
+    run: fvm flutter build apk --flavor staging --target lib/main_staging.dart
+    description: Build Staging APK using FVM.
+  build:prod:
+    run: fvm flutter build apk --flavor production --target lib/main_production.dart
+    description: Build Production APK using FVM.
+sdkPath: .fvm/flutter_sdk
