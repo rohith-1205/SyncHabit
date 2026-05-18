@@ -1,15 +1,28 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../config/app_config.dart';
 
 class AppLogger {
-  static void info(String message) {
+  final AppConfig _config;
+
+  AppLogger(this._config);
+
+  void info(String message) {
+    if (!_config.enableLogging) return;
     debugPrint('[INFO] $message');
   }
 
-  static void warning(String message) {
+  void warning(String message) {
+    if (!_config.enableLogging) return;
     debugPrint('[WARNING] $message');
   }
 
-  static void error(String message, [dynamic error, StackTrace? stackTrace]) {
+  void error(String message, [dynamic error, StackTrace? stackTrace]) {
+    if (!_config.enableLogging) return;
     debugPrint('[ERROR] $message | Error: $error | StackTrace: $stackTrace');
   }
 }
+
+final appLoggerProvider = Provider<AppLogger>((ref) {
+  return AppLogger(ref.watch(appConfigProvider));
+});

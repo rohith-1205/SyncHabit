@@ -1,10 +1,11 @@
-import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/widgets/neon_button.dart';
 import '../../../core/widgets/neon_card.dart';
+import '../application/providers/focus_providers.dart';
 
 class FocusScreen extends ConsumerStatefulWidget {
   const FocusScreen({super.key});
@@ -14,79 +15,6 @@ class FocusScreen extends ConsumerStatefulWidget {
 }
 
 class _FocusScreenState extends ConsumerState<FocusScreen> {
-  Timer? _timer;
-  int _totalSeconds = 45 * 60; // 45 min default block matching wireframe
-  int _remainingSeconds = 45 * 60;
-  bool _isRunning = true; // Auto start matching active wireframe state
-  String _activeSessionName = 'Code Architecture';
-  int _sessionCount = 2;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimerInternal();
-  }
-
-  void _startTimerInternal() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0 && _isRunning) {
-        setState(() {
-          _remainingSeconds--;
-        });
-      } else if (_remainingSeconds <= 0) {
-        _stopTimer();
-        HapticFeedback.vibrate();
-        _showCompletionModal();
-      }
-    });
-  }
-
-  void _togglePlayPause() {
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _isRunning = !_isRunning;
-    });
-  }
-
-  void _stopTimer() {
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _isRunning = false;
-      _remainingSeconds = _totalSeconds;
-    });
-  }
-
-  void _addFiveMinutes() {
-    HapticFeedback.lightImpact();
-    setState(() {
-      _totalSeconds += 5 * 60;
-      _remainingSeconds += 5 * 60;
-    });
-  }
-
-  void _reduceToTenMinutes() {
-    HapticFeedback.heavyImpact();
-    setState(() {
-      _totalSeconds = 10 * 60;
-      _remainingSeconds = 10 * 60;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Micro-adjustment applied: 10m block active.'), backgroundColor: ColorConstants.cardSurface),
-    );
-  }
-
-  void _switchToReading() {
-    HapticFeedback.heavyImpact();
-    setState(() {
-      _activeSessionName = 'Reading Habit';
-      _totalSeconds = 30 * 60;
-      _remainingSeconds = 30 * 60;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Protocol switched to Reading Habit.'), backgroundColor: ColorConstants.cardSurface),
-    );
-  }
-
   void _showCompletionModal() {
     showDialog(
       context: context,
@@ -103,17 +31,36 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    double progress = 1.0 - (_remainingSeconds / _totalSeconds);
-    String minutes = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
-    String seconds = (_remainingSeconds % 60).toString().padLeft(2, '0');
-    String totalMinutesStr = (_totalSeconds ~/ 60).toString();
+    final focusState = ref.watch(focusNotifierProvider);
+
+    ref.listen(focusNotifierProvider, (previous, next) {
+      if (next.hasValue && next.value != null) {
+        final curr = next.value!;
+        if (curr.activeSession?.isCompleted == true && previous?.value?.activeSession?.isCompleted == false) {
+          HapticFeedback.vibrate();
+          _showCompletionModal();
+        }
+      }
+    });
+
+    if (focusState.isLoading || focusState.value == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(ColorConstants.neonViolet))),
+      );
+    }
+
+    final stateData = focusState.value!;
+    final session = stateData.activeSession;
+    final totalSeconds = (session?.durationMinutes ?? 45) * 60;
+    final remainingSeconds = stateData.remainingSeconds;
+    final isRunning = stateData.isRunning;
+    final activeSessionName = session?.title ?? 'Code Architecture';
+
+    double progress = totalSeconds > 0 ? 1.0 - (remainingSeconds / totalSeconds) : 1.0;
+    String minutes = (remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    String seconds = (remainingSeconds % 60).toString().padLeft(2, '0');
+    String totalMinutesStr = (totalSeconds ~/ 60).toString();
 
     return Scaffold(
       body: Stack(
@@ -127,8 +74,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               height: 350,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isRunning ? ColorConstants.neonViolet.withOpacity(0.2) : ColorConstants.blueGlow.withOpacity(0.1),
-                boxShadow: [BoxShadow(color: _isRunning ? ColorConstants.neonViolet.withOpacity(0.4) : ColorConstants.blueGlow.withOpacity(0.2), blurRadius: 150)],
+                color: isRunning ? ColorConstants.neonViolet.withOpacity(0.2) : ColorConstants.blueGlow.withOpacity(0.1),
+                boxShadow: [BoxShadow(color: isRunning ? ColorConstants.neonViolet.withOpacity(0.4) : ColorConstants.blueGlow.withOpacity(0.2), blurRadius: 150)],
               ),
             ),
           ),
@@ -152,7 +99,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                     const SizedBox(height: 8),
                     // Subtitle: Session 02 · Code Architecture
                     Text(
-                      'Session 0$_sessionCount · $_activeSessionName',
+                      'Session 02 · $activeSessionName',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -172,7 +119,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                             value: progress,
                             strokeWidth: 8,
                             backgroundColor: ColorConstants.cardSurface.withOpacity(0.5),
-                            valueColor: AlwaysStoppedAnimation<Color>(_isRunning ? ColorConstants.pinkNeon : ColorConstants.neonViolet),
+                            valueColor: AlwaysStoppedAnimation<Color>(isRunning ? ColorConstants.pinkNeon : ColorConstants.neonViolet),
                           ),
                         ),
                         Column(
@@ -218,7 +165,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       children: [
                         // Cancel Button [ X ]
                         InkWell(
-                          onTap: _stopTimer,
+                          onTap: () => ref.read(focusNotifierProvider.notifier).completeSession(),
                           borderRadius: BorderRadius.circular(36),
                           child: Container(
                             width: 64,
@@ -235,7 +182,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
 
                         // Play/Pause Button [ || ]
                         InkWell(
-                          onTap: _togglePlayPause,
+                          onTap: () => ref.read(focusNotifierProvider.notifier).togglePlayPause(),
                           borderRadius: BorderRadius.circular(48),
                           child: Container(
                             width: 88,
@@ -245,14 +192,14 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                               gradient: const LinearGradient(colors: [ColorConstants.neonViolet, ColorConstants.pinkNeon]),
                               boxShadow: ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 24),
                             ),
-                            child: Icon(_isRunning ? Icons.pause : Icons.play_arrow, color: Colors.white, size: 38),
+                            child: Icon(isRunning ? Icons.pause : Icons.play_arrow, color: Colors.white, size: 38),
                           ),
                         ),
                         const SizedBox(width: 28),
 
                         // Add 5 Min Button [ +5m ]
                         InkWell(
-                          onTap: _addFiveMinutes,
+                          onTap: () => ref.read(focusNotifierProvider.notifier).addFiveMinutes(),
                           borderRadius: BorderRadius.circular(36),
                           child: Container(
                             width: 64,
@@ -309,14 +256,26 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                           // Pill Button 1: Reduce focus block to 10m
                           _buildMicroAdjustmentPill(
                             label: 'Reduce focus block to 10m',
-                            onTap: _reduceToTenMinutes,
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              ref.read(focusNotifierProvider.notifier).reduceToTenMinutes();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Micro-adjustment applied: 10m block active.'), backgroundColor: ColorConstants.cardSurface),
+                              );
+                            },
                           ),
                           const SizedBox(height: 16),
 
                           // Pill Button 2: Switch to Reading Habit
                           _buildMicroAdjustmentPill(
                             label: 'Switch to Reading Habit',
-                            onTap: _switchToReading,
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              ref.read(focusNotifierProvider.notifier).switchToReading();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Protocol switched to Reading Habit.'), backgroundColor: ColorConstants.cardSurface),
+                              );
+                            },
                           ),
                         ],
                       ),

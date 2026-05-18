@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/widgets/shimmer_loader.dart';
@@ -26,6 +26,17 @@ class _HubScreenState extends ConsumerState<HubScreen> {
 
     return Scaffold(
       backgroundColor: ColorConstants.bgDark,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 110),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddHabitModal(context),
+          backgroundColor: ColorConstants.neonViolet,
+          elevation: 8,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text('Add Habit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ),
       body: Stack(
         children: [
           // Ambient Background Glows
@@ -111,7 +122,7 @@ class _HubScreenState extends ConsumerState<HubScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Hello, ${user?.displayName?.split(' ').first ?? 'Developer'}',
+                                'Hello, ${user?.displayName.split(' ').first ?? 'Developer'}',
                                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white,
@@ -176,9 +187,27 @@ class _HubScreenState extends ConsumerState<HubScreen> {
                           habitsState.when(
                             data: (habits) {
                               final completed = habits.where((h) => h.isCompletedToday).length;
-                              return Text(
-                                '$completed of ${habits.length}',
-                                style: TextStyle(color: ColorConstants.textMuted.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w600),
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$completed of ${habits.length}',
+                                    style: TextStyle(color: ColorConstants.textMuted.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  GestureDetector(
+                                    onTap: () => _showAddHabitModal(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: ColorConstants.neonViolet,
+                                        shape: BoxShape.circle,
+                                        boxShadow: ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 12),
+                                      ),
+                                      child: const Icon(Icons.add, color: Colors.white, size: 20),
+                                    ),
+                                  ),
+                                ],
                               );
                             },
                             loading: () => const SizedBox(),
@@ -579,6 +608,39 @@ class _HubScreenState extends ConsumerState<HubScreen> {
                   ),
                 ),
 
+                // Edit Button
+                GestureDetector(
+                  onTap: () => _showEditHabitModal(context, habit),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.05),
+                      border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+                    ),
+                    child: const Icon(Icons.edit_outlined, color: Colors.white70, size: 16),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Delete Button
+                GestureDetector(
+                  onTap: () {
+                    ref.read(habitNotifierProvider.notifier).removeHabit(habit.id);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Habit "${habit.title}" deleted.'), backgroundColor: ColorConstants.cardSurface));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.05),
+                      border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+                    ),
+                    child: const Icon(Icons.delete_outline, color: Colors.white70, size: 16),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
                 // Wireframe Checkbox (Solid purple circle with check vs empty ring)
                 Container(
                   width: 32,
@@ -653,6 +715,392 @@ class _HubScreenState extends ConsumerState<HubScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAddHabitModal(BuildContext context) {
+    final titleController = TextEditingController();
+    String selectedCategory = 'Productivity';
+    String selectedIcon = 'self_improvement';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(modalContext).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: ColorConstants.bgDark,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: ColorConstants.neonViolet.withOpacity(0.3), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(color: ColorConstants.neonViolet.withOpacity(0.15), blurRadius: 40, spreadRadius: 5),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Create New Habit',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 22,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white70),
+                          onPressed: () => Navigator.pop(modalContext),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Title Input
+                    Text(
+                      'HABIT TITLE',
+                      style: TextStyle(
+                        letterSpacing: 1.5,
+                        color: ColorConstants.textMuted.withOpacity(0.8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: titleController,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        hintText: 'e.g., Morning Meditation, Deep Work',
+                        hintStyle: TextStyle(color: ColorConstants.textMuted.withOpacity(0.5)),
+                        filled: true,
+                        fillColor: ColorConstants.cardSurface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: ColorConstants.neonViolet.withOpacity(0.3), width: 1.5),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: ColorConstants.neonViolet.withOpacity(0.3), width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: ColorConstants.neonViolet, width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Category Selection
+                    Text(
+                      'CATEGORY',
+                      style: TextStyle(
+                        letterSpacing: 1.5,
+                        color: ColorConstants.textMuted.withOpacity(0.8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: ['Productivity', 'Mindfulness', 'Health', 'Fitness'].map((category) {
+                        final isSelected = selectedCategory == category;
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              selectedCategory = category;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? ColorConstants.neonViolet : ColorConstants.cardSurface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected ? ColorConstants.neonViolet : ColorConstants.textMuted.withOpacity(0.2),
+                                width: 1.5,
+                              ),
+                              boxShadow: isSelected ? ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 12) : null,
+                            ),
+                            child: Text(
+                              category,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : ColorConstants.textMuted,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Icon Selection
+                    Text(
+                      'ICON',
+                      style: TextStyle(
+                        letterSpacing: 1.5,
+                        color: ColorConstants.textMuted.withOpacity(0.8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        {'name': 'self_improvement', 'icon': Icons.psychology},
+                        {'name': 'code', 'icon': Icons.fitness_center},
+                        {'name': 'water_drop', 'icon': Icons.water_drop},
+                        {'name': 'menu_book', 'icon': Icons.menu_book},
+                      ].map((item) {
+                        final iconName = item['name'] as String;
+                        final iconData = item['icon'] as IconData;
+                        final isSelected = selectedIcon == iconName;
+
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              selectedIcon = iconName;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isSelected ? ColorConstants.neonViolet.withOpacity(0.2) : ColorConstants.cardSurface,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected ? ColorConstants.neonViolet : ColorConstants.textMuted.withOpacity(0.2),
+                                width: 2,
+                              ),
+                              boxShadow: isSelected ? ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 16) : null,
+                            ),
+                            child: Icon(iconData, color: isSelected ? ColorConstants.neonViolet : ColorConstants.textMuted, size: 28),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (titleController.text.trim().isEmpty) return;
+
+                          final newHabit = HabitModel(
+                            id: const Uuid().v4(),
+                            title: titleController.text.trim(),
+                            iconName: selectedIcon,
+                            streakCount: 0,
+                            isCompletedToday: false,
+                            progress: 0.0,
+                            category: selectedCategory,
+                          );
+
+                          ref.read(habitNotifierProvider.notifier).addHabit(newHabit);
+                          Navigator.pop(modalContext);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Habit "${newHabit.title}" created successfully!'),
+                              backgroundColor: ColorConstants.cardSurface,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorConstants.neonViolet,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 8,
+                          shadowColor: ColorConstants.neonViolet.withOpacity(0.5),
+                        ),
+                        child: const Text(
+                          'Create Habit',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                  ],
+                ),
+               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditHabitModal(BuildContext context, HabitModel habit) {
+    final titleController = TextEditingController(text: habit.title);
+    String selectedCategory = habit.category;
+    String selectedIcon = habit.iconName;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: ColorConstants.bgDark,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: ColorConstants.neonViolet.withOpacity(0.3), width: 1.5),
+                  boxShadow: [BoxShadow(color: ColorConstants.neonViolet.withOpacity(0.15), blurRadius: 40, spreadRadius: 5)],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Edit Habit', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, fontSize: 22, color: Colors.white)),
+                        IconButton(icon: const Icon(Icons.delete_outline, color: ColorConstants.danger), onPressed: () {
+                          ref.read(habitNotifierProvider.notifier).removeHabit(habit.id);
+                          Navigator.pop(modalContext);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Habit "${habit.title}" deleted.'), backgroundColor: ColorConstants.cardSurface));
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Title
+                    Text('HABIT TITLE', style: TextStyle(letterSpacing: 1.5, color: ColorConstants.textMuted.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: titleController,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: ColorConstants.cardSurface,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: ColorConstants.neonViolet.withOpacity(0.3), width: 1.5)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: ColorConstants.neonViolet.withOpacity(0.3), width: 1.5)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: ColorConstants.neonViolet, width: 2)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Category
+                    Text('CATEGORY', style: TextStyle(letterSpacing: 1.5, color: ColorConstants.textMuted.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: ['Productivity', 'Mindfulness', 'Health', 'Fitness'].map((category) {
+                        final isSelected = selectedCategory == category;
+                        return GestureDetector(
+                          onTap: () => setModalState(() => selectedCategory = category),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? ColorConstants.neonViolet : ColorConstants.cardSurface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: isSelected ? ColorConstants.neonViolet : ColorConstants.textMuted.withOpacity(0.2), width: 1.5),
+                              boxShadow: isSelected ? ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 12) : null,
+                            ),
+                            child: Text(category, style: TextStyle(color: isSelected ? Colors.white : ColorConstants.textMuted, fontWeight: isSelected ? FontWeight.bold : FontWeight.w600, fontSize: 14)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Icon
+                    Text('ICON', style: TextStyle(letterSpacing: 1.5, color: ColorConstants.textMuted.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        {'name': 'self_improvement', 'icon': Icons.psychology},
+                        {'name': 'code', 'icon': Icons.fitness_center},
+                        {'name': 'water_drop', 'icon': Icons.water_drop},
+                        {'name': 'menu_book', 'icon': Icons.menu_book},
+                      ].map((item) {
+                        final iconName = item['name'] as String;
+                        final iconData = item['icon'] as IconData;
+                        final isSelected = selectedIcon == iconName;
+
+                        return GestureDetector(
+                          onTap: () => setModalState(() => selectedIcon = iconName),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isSelected ? ColorConstants.neonViolet.withOpacity(0.2) : ColorConstants.cardSurface,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: isSelected ? ColorConstants.neonViolet : ColorConstants.textMuted.withOpacity(0.2), width: 2),
+                              boxShadow: isSelected ? ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 16) : null,
+                            ),
+                            child: Icon(iconData, color: isSelected ? ColorConstants.neonViolet : ColorConstants.textMuted, size: 28),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (titleController.text.trim().isEmpty) return;
+
+                          final updatedHabit = HabitModel(
+                            id: habit.id,
+                            title: titleController.text.trim(),
+                            iconName: selectedIcon,
+                            streakCount: habit.streakCount,
+                            isCompletedToday: habit.isCompletedToday,
+                            progress: habit.progress,
+                            category: selectedCategory,
+                          );
+
+                          ref.read(habitNotifierProvider.notifier).updateHabit(updatedHabit);
+                          Navigator.pop(modalContext);
+
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Habit "${updatedHabit.title}" updated successfully!'), backgroundColor: ColorConstants.cardSurface));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorConstants.neonViolet,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 8,
+                          shadowColor: ColorConstants.neonViolet.withOpacity(0.5),
+                        ),
+                        child: const Text('Save Changes', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

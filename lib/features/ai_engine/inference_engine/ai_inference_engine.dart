@@ -1,10 +1,8 @@
-import 'dart:math';
 import '../models/ai_insight.dart';
 import '../models/burnout_metrics.dart';
 import '../models/chrono_slot.dart';
 
 class AiInferenceEngine {
-  final Random _random = Random();
 
   /// Analyzes habit completion timestamps to find optimal productivity hours
   String analyzeCompletionTiming(List<DateTime> completionTimes) {

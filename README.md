@@ -29,6 +29,11 @@ fvm install
 fvm flutter pub get
 ```
 
+3. Generate Isar database schema bindings and Riverpod code:
+```bash
+fvm dart run build_runner build --delete-conflicting-outputs
+```
+
 ---
 
 ## Running the Application (Flavors)

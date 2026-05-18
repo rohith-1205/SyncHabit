@@ -287,7 +287,7 @@ class _ChronoScreenState extends ConsumerState<ChronoScreen> {
                 ],
               ),
             );
-          }).toList(),
+          }),
 
           // Smart Slots Bottom Summary Card (Shown when SyncHabit Smart Slots is active)
           if (!_isDeviceStreams) ...[

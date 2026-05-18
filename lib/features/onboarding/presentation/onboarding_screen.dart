@@ -69,7 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                         border: Border.all(color: ColorConstants.neonViolet.withOpacity(0.3), width: 3),
                         boxShadow: [
                           BoxShadow(color: ColorConstants.neonViolet.withOpacity(0.4), blurRadius: 40),
-                          BoxShadow(color: ColorConstants.bgMedium, blurRadius: 20, spreadRadius: 5),
+                          const BoxShadow(color: ColorConstants.bgMedium, blurRadius: 20, spreadRadius: 5),
                         ],
                       ),
                       child: Center(

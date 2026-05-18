@@ -1,15 +1,26 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../config/app_config.dart';
+import '../utils/logger.dart';
 
 class AnalyticsService {
+  final AppConfig _config;
+  final AppLogger _logger;
+
+  AnalyticsService(this._config, this._logger);
+
   Future<void> logEvent(String name, {Map<String, dynamic>? parameters}) async {
-    debugPrint('Analytics Event: $name | Params: $parameters');
+    _logger.info('Analytics Event [${_config.environment.name}]: $name | Params: $parameters');
   }
 
   Future<void> setUserId(String? userId) async {
-    debugPrint('Analytics User ID set to: $userId');
+    _logger.info('Analytics User ID set to: $userId');
   }
 
   Future<void> setUserProperty(String name, String value) async {
-    debugPrint('Analytics Property: $name = $value');
+    _logger.info('Analytics Property: $name = $value');
   }
 }
+
+final analyticsServiceProvider = Provider<AnalyticsService>((ref) {
+  return AnalyticsService(ref.watch(appConfigProvider), ref.watch(appLoggerProvider));
+});

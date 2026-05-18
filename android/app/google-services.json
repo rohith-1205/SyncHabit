@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "182981373013",
+    "project_id": "synchabit-4cfa4",
+    "storage_bucket": "synchabit-4cfa4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182981373013:android:5156fabbe2daa52f2d78dc",
+        "android_client_info": {
+          "package_name": "com.synchabit.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182981373013-gc6j18dj177ci585rc3b5hr4fgtjf25g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.synchabit.dev",
+            "certificate_hash": "2a33ad01127dad9e02035b98c2e1b19829c20f25"
+          }
+        },
+        {
+          "client_id": "182981373013-6p83ar2lhj8ej6r25cs783iehe0l4tmj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLd-Ete1-E7tZJY-8eRLX7onWABRn_xuA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182981373013-6p83ar2lhj8ej6r25cs783iehe0l4tmj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "182981373013-ad5r8abh6vk56ps39grbt0kpqud0b4ej.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.synchabit.dev"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

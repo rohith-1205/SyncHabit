@@ -3,12 +3,13 @@ plugins {
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
 
 android {
     namespace = "com.synchabit.synchabit"
     compileSdk = 34
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "25.1.8937393"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -17,6 +18,13 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    packagingOptions {
+        jniLibs {
+            pickFirsts.add("lib/**/libisar.so")
+            useLegacyPackaging = true
+        }
     }
 
     flavorDimensions "env"
@@ -40,7 +48,7 @@ android {
     }
 
     defaultConfig {
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

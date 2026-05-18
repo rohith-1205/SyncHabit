@@ -14,10 +14,10 @@ class BottomNavBar extends StatelessWidget {
     final currentIndex = navigationShell.currentIndex;
 
     final List<Map<String, dynamic>> tabs = [
-      {'label': 'Hub', 'icon': Icons.grid_view, 'color': ColorConstants.neonViolet},
-      {'label': 'Stats', 'icon': Icons.bar_chart, 'color': ColorConstants.success},
+      {'label': 'Planner', 'icon': Icons.calendar_today, 'color': ColorConstants.neonViolet},
+      {'label': 'Projects', 'icon': Icons.account_tree, 'color': ColorConstants.blueGlow},
       {'label': 'Focus', 'icon': Icons.timer_outlined, 'color': ColorConstants.pinkNeon},
-      {'label': 'Duels', 'icon': Icons.sports_kabaddi, 'color': ColorConstants.blueGlow},
+      {'label': 'Stats', 'icon': Icons.bar_chart, 'color': ColorConstants.success},
       {'label': 'Pro', 'icon': Icons.workspace_premium, 'color': ColorConstants.pinkNeon},
     ];
 

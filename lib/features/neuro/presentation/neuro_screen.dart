@@ -346,12 +346,12 @@ class _NeuroScreenState extends ConsumerState<NeuroScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: ColorConstants.neonGlow(ColorConstants.neonViolet, blurRadius: 16),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.close_fullscreen, color: Colors.white, size: 20),
-                        const SizedBox(width: 12),
-                        const Text('Collapse to Mini-Floating Widget', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                        Icon(Icons.close_fullscreen, color: Colors.white, size: 20),
+                        SizedBox(width: 12),
+                        Text('Collapse to Mini-Floating Widget', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),

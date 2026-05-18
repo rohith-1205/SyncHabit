@@ -1,11 +1,6 @@
-import 'core/config/flavor_config.dart';
+import 'core/config/app_config_prod.dart';
 import 'main/app.dart';
 
 void main() {
-  bootstrap(
-    Flavor.production,
-    'SyncHabit',
-    'com.synchabit.app',
-    'https://api.synchabit.ai/v1',
-  );
+  bootstrap(prodConfig);
 }

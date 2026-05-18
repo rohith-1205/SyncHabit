@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/color_constants.dart';
 import '../../../core/widgets/neon_button.dart';
 import '../../../core/widgets/neon_card.dart';
