@@ -9,6 +9,13 @@
 .history
 .svn/
 
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
 # IntelliJ related
 *.iml
 *.ipr
